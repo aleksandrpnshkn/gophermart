@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:17.5-alpine3.22
+    environment:
+      POSTGRES_DB: "gophermart"
+      POSTGRES_USER: "admin"
+      # для локальной разработки секьюрность особо не нужна
+      POSTGRES_PASSWORD: "qwerty"
+    volumes:
+    # скрипты для инициализации БД
+    - ./docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    - gophermart-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d gophermart"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  gophermart-data:
