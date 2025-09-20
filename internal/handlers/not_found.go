@@ -3,14 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/aleksandrpnshkn/gophermart/internal/handlers/responses"
+	"github.com/aleksandrpnshkn/gophermart/internal/services"
 )
 
-func NotFound() http.HandlerFunc {
+func NotFound(responser *services.Responser) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		rawResponseData, _ := responses.EncodeNotFoundResponse()
-
-		res.WriteHeader(http.StatusNotFound)
-		res.Write(rawResponseData)
+		responser.WriteNotFoundError(req.Context(), res)
 	}
 }

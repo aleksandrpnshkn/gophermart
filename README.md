@@ -39,4 +39,11 @@ go build -o cmd/gophermart/gophermart cmd/gophermart/*go \
 ```bash
 curl --include localhost:8081/
 curl --include localhost:8081/api/ping
+
+# регистрация
+curl --request POST \
+    --header "Content-Type: application/json" \
+    --data '{"login": "user", "password": "secret"}' \
+    --include \
+    localhost:8081/api/user/register
 ```

@@ -6,6 +6,7 @@ import (
 
 	"github.com/aleksandrpnshkn/gophermart/internal/config"
 	"github.com/aleksandrpnshkn/gophermart/internal/handlers"
+	"github.com/aleksandrpnshkn/gophermart/internal/services"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -18,11 +19,18 @@ func Run(
 ) error {
 	router := chi.NewRouter()
 
+	uni := services.NewAppUni()
+	responser := services.NewResponser(uni)
+	validate := services.NewValidate(uni)
+
 	router.Use(middleware.SetHeader("Content-Type", "application/json"))
 
-	router.NotFound(handlers.NotFound())
+	router.NotFound(handlers.NotFound(responser))
 
 	router.Get("/api/ping", handlers.Ping())
+
+	router.Post("/api/user/login", handlers.Login(ctx, responser, validate))
+	router.Post("/api/user/register", handlers.Register(ctx, responser, validate))
 
 	logger.Info("Running app...")
 
