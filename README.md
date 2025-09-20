@@ -28,9 +28,15 @@ docker compose down --volumes
 source ~/.profile
 
 # Запустить unit-тесты (count для отключения кэша, помогает отлавливать flaky-тесты)
-go test -count=100 ./...
+go test -count=10 ./...
 
 # Запустить сервер
 go build -o cmd/gophermart/gophermart cmd/gophermart/*go \
     && ./cmd/gophermart/gophermart
+```
+
+## Тестовые запросы
+```bash
+curl --include localhost:8081/
+curl --include localhost:8081/api/ping
 ```
