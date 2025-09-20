@@ -6,6 +6,7 @@ import (
 
 	"github.com/aleksandrpnshkn/gophermart/internal/config"
 	"github.com/aleksandrpnshkn/gophermart/internal/handlers"
+	"github.com/aleksandrpnshkn/gophermart/internal/middlewares"
 	"github.com/aleksandrpnshkn/gophermart/internal/services"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -23,6 +24,7 @@ func Run(
 	responser := services.NewResponser(uni)
 	validate := services.NewValidate(uni)
 
+	router.Use(middlewares.NewLogMiddleware(logger))
 	router.Use(middleware.SetHeader("Content-Type", "application/json"))
 
 	router.NotFound(handlers.NotFound(responser))
