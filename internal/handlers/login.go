@@ -3,19 +3,24 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
-	"github.com/aleksandrpnshkn/gophermart/internal/handlers/requests"
-	"github.com/aleksandrpnshkn/gophermart/internal/handlers/responses"
+	"github.com/aleksandrpnshkn/gophermart/internal/middlewares"
+	"github.com/aleksandrpnshkn/gophermart/internal/requests"
+	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 	"github.com/aleksandrpnshkn/gophermart/internal/services"
 	"github.com/go-playground/validator/v10"
+	"go.uber.org/zap"
 )
 
 func Login(
 	ctx context.Context,
 	responser *services.Responser,
 	validate *validator.Validate,
+	auther services.Auther,
+	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
@@ -39,6 +44,20 @@ func Login(
 			responser.WriteValidationError(ctx, res, err)
 			return
 		}
+
+		_, rawToken, err := auther.LoginUser(ctx, requestData.Login, requestData.Password)
+		if err != nil {
+			if errors.Is(err, services.ErrBadCredentials) {
+				responser.WriteUnauthorizedError(ctx, res)
+				return
+			}
+
+			logger.Error("failed to login user", zap.Error(err))
+			responser.WriteInternalServerError(ctx, res)
+			return
+		}
+
+		middlewares.SetAuthCookie(res, rawToken)
 
 		rawResponseData, _ := responses.EncodeOkResponse()
 

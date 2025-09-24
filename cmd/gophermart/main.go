@@ -8,6 +8,7 @@ import (
 	"github.com/aleksandrpnshkn/gophermart/internal/app"
 	"github.com/aleksandrpnshkn/gophermart/internal/config"
 	"github.com/aleksandrpnshkn/gophermart/internal/logs"
+	"github.com/aleksandrpnshkn/gophermart/internal/storage"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +23,13 @@ func main() {
 	}
 	defer logger.Sync()
 
-	err = app.Run(ctx, config, logger)
+	usersStorage, err := storage.NewUsersStorage(ctx, config.DatabaseURI, logger)
+	if err != nil {
+		logger.Fatal("failed to init users storage", zap.Error(err))
+	}
+	defer usersStorage.Close()
+
+	err = app.Run(ctx, config, logger, usersStorage)
 	if err != nil {
 		logger.Fatal("failed to run app", zap.Error(err))
 	}

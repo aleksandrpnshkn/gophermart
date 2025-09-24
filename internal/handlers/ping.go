@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/aleksandrpnshkn/gophermart/internal/handlers/responses"
+	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 )
 
 func Ping() http.HandlerFunc {

@@ -4,12 +4,16 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/aleksandrpnshkn/gophermart/internal/handlers/responses"
+	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 	"github.com/go-playground/validator/v10"
 )
 
 type Responser struct {
 	uni *AppUni
+}
+
+func (r *Responser) WriteUnauthorizedError(ctx context.Context, res http.ResponseWriter) {
+	r.writeError(ctx, res, http.StatusUnauthorized, "unauthorized")
 }
 
 func (r *Responser) WriteNotFoundError(ctx context.Context, res http.ResponseWriter) {
