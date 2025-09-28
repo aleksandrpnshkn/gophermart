@@ -1,0 +1,19 @@
+CREATE TABLE users (
+    id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    login VARCHAR(8) NOT NULL UNIQUE,
+    password_hash BYTEA NOT NULL
+);
+
+CREATE TABLE orders (
+    number VARCHAR(30) NOT NULL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    accrual BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    uploaded_at TIMESTAMP NOT NULL,
+
+    CONSTRAINT fk_orders_user_id
+    FOREIGN KEY (user_id)
+    REFERENCES users (id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);

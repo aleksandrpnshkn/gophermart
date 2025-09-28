@@ -2,7 +2,6 @@ package storage
 
 import (
 	"embed"
-	"errors"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -12,11 +11,7 @@ import (
 //go:embed migrations/*.sql
 var migrationsFiles embed.FS
 
-var (
-	ErrNoChange = errors.New("no change")
-)
-
-func runMigrations(databaseDSN string) error {
+func RunMigrations(databaseDSN string) error {
 	sourceDriver, err := iofs.New(migrationsFiles, "migrations")
 	if err != nil {
 		return err

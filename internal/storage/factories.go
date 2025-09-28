@@ -2,11 +2,10 @@ package storage
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"github.com/aleksandrpnshkn/gophermart/internal/storage/orders"
 	"github.com/aleksandrpnshkn/gophermart/internal/storage/users"
-	"github.com/golang-migrate/migrate/v4"
 	"go.uber.org/zap"
 )
 
@@ -22,16 +21,20 @@ func NewUsersStorage(
 		return nil, fmt.Errorf("failed to init users SQL storage: %w", err)
 	}
 
-	err = runMigrations(databaseDSN)
+	return storage, nil
+}
+
+func NewOrdersStorage(
+	ctx context.Context,
+	databaseDSN string,
+	logger *zap.Logger,
+) (orders.Storage, error) {
+	var storage orders.Storage
+
+	storage, err := orders.NewSQLStorage(ctx, databaseDSN)
 	if err != nil {
-		if errors.Is(err, migrate.ErrNoChange) {
-			logger.Info("nothing to migrate")
-			return storage, nil
-		} else {
-			return nil, fmt.Errorf("failed to run SQL migrations: %w", err)
-		}
+		return nil, fmt.Errorf("failed to init users SQL storage: %w", err)
 	}
 
-	logger.Info("database successfully migrated")
 	return storage, nil
 }

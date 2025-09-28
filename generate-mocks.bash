@@ -16,6 +16,7 @@ if [[ $CURRENT_DIR_BASENAME != "gophermart" ]]; then
 fi
 
 mockgen -destination=internal/mocks/mock_users_storage.go -package=mocks -mock_names Storage=MockUsersStorage ./internal/storage/users Storage
+mockgen -destination=internal/mocks/mock_orders_storage.go -package=mocks -mock_names Storage=MockOrdersStorage ./internal/storage/orders Storage
 
 mockgen -destination=internal/mocks/mock_services_auther.go -package=mocks ./internal/services Auther
 

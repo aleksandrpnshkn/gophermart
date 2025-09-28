@@ -70,4 +70,12 @@ curl --request POST \
     --data '{"login": "user", "password": "secret"}' \
     --include \
     localhost:8081/api/user/login
+
+# добавить заказ в обработку заказ
+curl --request POST \
+    --header "Content-Type: text/plain" \
+    --cookie "auth_token=TOKEN" \
+    --data '12345678903' \
+    --include \
+    localhost:8081/api/user/orders 
 ```
