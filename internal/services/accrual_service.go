@@ -16,7 +16,7 @@ type IAccrualService interface {
 }
 
 type AccrualService struct {
-	client  http.Client
+	client  *http.Client
 	baseURL string
 	logger  *zap.Logger
 }
@@ -111,7 +111,7 @@ func (a *AccrualService) GetAccrual(
 	case statusInvalid:
 		return zero, ErrAccrualInvalidStatus
 	case statusProcessed:
-		return decimal.NewFromInt(int64(accrualOrder.Accrual)), nil
+		return decimal.NewFromFloat(accrualOrder.Accrual), nil
 	case statusRegistered, statusProcessing:
 		return zero, ErrAccrualNotProcessedStatus
 	default:
@@ -124,11 +124,10 @@ func (a *AccrualService) GetAccrual(
 }
 
 func NewAccrualService(
+	client *http.Client,
 	logger *zap.Logger,
 	baseURL string,
 ) *AccrualService {
-	client := http.Client{}
-
 	return &AccrualService{
 		client:  client,
 		baseURL: baseURL,

@@ -29,7 +29,8 @@ func Run(
 	validate := services.NewValidate(uni)
 	auther := services.NewAuther(usersStorage, config.JwtSecretKey)
 
-	accrualService := services.NewAccrualService(logger, config.AccrualSystemAddress)
+	accrualClient := http.Client{}
+	accrualService := services.NewAccrualService(&accrualClient, logger, config.AccrualSystemAddress)
 	ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
 
 	ordersProceessor := services.NewOrdersProcessor(ordersService)
