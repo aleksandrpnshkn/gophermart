@@ -19,7 +19,8 @@ func AddOrder(
 	responser *services.Responser,
 	auther services.Auther,
 	logger *zap.Logger,
-	ordersService *services.OrdersService,
+	ordersService services.IOrdersService,
+	ordersQueue services.OrdersQueue,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		user, err := auther.FromUserContext(req.Context())
@@ -48,7 +49,7 @@ func AddOrder(
 		}
 		orderNumber := string(rawOrderNumber)
 
-		err = ordersService.Add(ctx, orderNumber, user)
+		order, err := ordersService.Add(ctx, orderNumber, user)
 		if err != nil {
 			if errors.Is(err, services.ErrOrderAlreadyCreated) {
 				responser.WriteSuccess(ctx, res)
@@ -59,24 +60,23 @@ func AddOrder(
 				return
 			}
 
-			logger.Error("failed to create order", zap.Error(err))
+			logger.Error("failed to create order",
+				zap.String("order_number", orderNumber),
+				zap.Error(err),
+			)
 			responser.WriteInternalServerError(ctx, res)
 			return
 		}
 
-		// добавить в воркер
-
-		// Статусы заказов должны быть персистентными.
-		// Неполная асинхронщина, надо проверить заказы в БД.
-		// Чтобы проверка была успешной надо либо сразу же складывать заказы в БД, либо держать кэш принятых заказов и батчами их грузить в БД.
-		// Можно сразу сделать батчинг на входе в БД, чтобы не дудосить БД.
-		// Батчинг должен быть универсальным и для сохранения в БД, и для обновления.
-		// В батчинге не должно быть одного и того же заказа в разных состояниях, чтобы не приходилось разбираться с гонками.
-		// Реализация очереди может быть одна, но самих очередей две:
-		// updateOrderQueue := queues.New() // сюда по идее могут поступать заказы на любом этапе
-		// checkOrderQueue := queues.New()
-
-		// добавить заказ в очередь на обработку
+		err = ordersQueue.Add(ctx, order)
+		if err != nil {
+			logger.Error("failed to add order to queue",
+				zap.String("order_number", orderNumber),
+				zap.Error(err),
+			)
+			responser.WriteInternalServerError(ctx, res)
+			return
+		}
 
 		rawResponseData, _ := responses.EncodeOkResponse()
 

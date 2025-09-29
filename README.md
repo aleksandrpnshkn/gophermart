@@ -42,14 +42,14 @@ docker compose down --volumes
 go test -count=10 ./...
 ```
 
-## Сборка
+## Сборка и запуск
 ```bash
 # Добавить go в PATH
 source ~/.profile
 
 # Запустить сервер
 go build -o cmd/gophermart/gophermart cmd/gophermart/*go \
-    && ./cmd/gophermart/gophermart
+    && ./cmd/gophermart/gophermart -l debug
 ```
 
 ## Тестовые запросы
@@ -78,4 +78,31 @@ curl --request POST \
     --data '12345678903' \
     --include \
     localhost:8081/api/user/orders 
+```
+
+## accrual
+```bash
+# Запустить сервис расчёта баллов accrual
+./cmd/accrual/accrual_linux_amd64 \
+    -a "localhost:8083" \
+    -d "postgres://admin:qwerty@localhost:5434/accrual?sslmode=disable"
+
+# создать товар
+curl --request POST \
+    --header "Content-Type: application/json" \
+    --data '{"match": "Bork", "reward": 10, "reward_type": "%"}' \
+    --include \
+    localhost:8083/api/goods
+
+# зарегать заказ
+curl --request POST \
+    --header "Content-Type: application/json" \
+    --data '{"order": "12345678903", "goods": [{"description": "Чай", "price": 7000}]}' \
+    --include \
+    localhost:8083/api/orders
+
+# проверить статус заказа
+curl --request GET \
+    --include \
+    localhost:8083/api/orders/12345678903
 ```

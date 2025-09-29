@@ -24,7 +24,7 @@ func TestRegister(t *testing.T) {
 	responser := services.NewResponser(uni)
 	logger := zap.NewExample()
 
-	t.Run("empty data", func(t *testing.T) {
+	t.Run("invalid data format", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 
 		handler := Register(context.Background(), responser, validate, auther, logger)
@@ -49,7 +49,7 @@ func TestRegister(t *testing.T) {
             "login": "admin"
         }`).
 			Expect(t).
-			Status(http.StatusBadRequest).
+			Status(http.StatusUnprocessableEntity).
 			Body(`{
 		    "error": {
 		        "message": "invalid data",

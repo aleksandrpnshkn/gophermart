@@ -20,5 +20,28 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  postgres-accrual:
+    image: postgres:17.5-alpine3.22
+    environment:
+      POSTGRES_DB: "accrual"
+      POSTGRES_USER: "admin"
+      # для локальной разработки секьюрность особо не нужна
+      POSTGRES_PASSWORD: "qwerty"
+    volumes:
+    # скрипты для инициализации БД
+    - ./docker/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    - accrual-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d accrual"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
 volumes:
   gophermart-data:
+
+  accrual-data:

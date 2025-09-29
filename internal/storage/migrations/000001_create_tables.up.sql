@@ -7,7 +7,7 @@ CREATE TABLE users (
 CREATE TABLE orders (
     number VARCHAR(30) NOT NULL PRIMARY KEY,
     user_id BIGINT NOT NULL,
-    accrual BIGINT NOT NULL,
+    accrual DECIMAL NOT NULL,
     status VARCHAR(20) NOT NULL,
     uploaded_at TIMESTAMP NOT NULL,
 

@@ -24,12 +24,12 @@ func TestLogin(t *testing.T) {
 	responser := services.NewResponser(uni)
 	logger := zap.NewExample()
 
-	t.Run("empty data", func(t *testing.T) {
+	t.Run("invalid data format", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 
 		handler := Login(context.Background(), responser, validate, auther, logger)
 
-		apitest.New("empty data").
+		apitest.New().
 			HandlerFunc(handler).
 			Post("/api/user/login").
 			Expect(t).
@@ -42,14 +42,14 @@ func TestLogin(t *testing.T) {
 
 		handler := Login(context.Background(), responser, validate, auther, logger)
 
-		apitest.New("invalid data").
+		apitest.New().
 			HandlerFunc(handler).
 			Post("/api/user/login").
 			Body(`{
             "login": "admin"
         }`).
 			Expect(t).
-			Status(http.StatusBadRequest).
+			Status(http.StatusUnprocessableEntity).
 			Body(`{
 		    "error": {
 		        "message": "invalid data",

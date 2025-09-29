@@ -29,7 +29,15 @@ func Run(
 	validate := services.NewValidate(uni)
 	auther := services.NewAuther(usersStorage, config.JwtSecretKey)
 
-	ordersService := services.NewOrdersService(ordersStorage)
+	accrualService := services.NewAccrualService(logger, config.AccrualSystemAddress)
+	ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
+
+	ordersProceessor := services.NewOrdersProcessor(ordersService)
+	ordersQueue := services.NewOrdersQueue(
+		ctx,
+		ordersProceessor,
+		logger,
+	)
 
 	router.Use(middlewares.NewLogMiddleware(logger))
 	router.Use(middleware.SetHeader("Content-Type", "application/json"))
@@ -44,10 +52,10 @@ func Run(
 	router.Group(func(router chi.Router) {
 		router.Use(middlewares.NewAuthMiddleware(logger, auther))
 
-		router.Post("/api/user/orders", handlers.AddOrder(ctx, responser, auther, logger, ordersService))
+		router.Post("/api/user/orders", handlers.AddOrder(ctx, responser, auther, logger, ordersService, ordersQueue))
 	})
 
-	logger.Info("Running app...")
+	logger.Info("running app...")
 
 	err := http.ListenAndServe(config.RunAddress, router)
 

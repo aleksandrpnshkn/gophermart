@@ -75,6 +75,22 @@ func (s *SQLStorage) Create(ctx context.Context, order models.Order) error {
 	return ErrOrderAlreadyCreated
 }
 
+func (s *SQLStorage) Update(
+	ctx context.Context,
+	order models.Order,
+) error {
+	_, err := s.pgxpool.Exec(ctx, `
+        UPDATE orders 
+        SET status = @status, accrual = @accrual
+        WHERE number = @number
+    `, pgx.NamedArgs{
+		"number":  order.OrderNumber,
+		"status":  order.Status,
+		"accrual": order.Accrual,
+	})
+	return err
+}
+
 func (s *SQLStorage) Close() error {
 	s.pgxpool.Close()
 	return nil

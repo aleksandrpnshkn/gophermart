@@ -20,4 +20,9 @@ mockgen -destination=internal/mocks/mock_orders_storage.go -package=mocks -mock_
 
 mockgen -destination=internal/mocks/mock_services_auther.go -package=mocks ./internal/services Auther
 
+mockgen -destination=internal/mocks/mock_services_accrual_service.go -package=mocks ./internal/services IAccrualService
+mockgen -destination=internal/mocks/mock_services_orders_service.go -package=mocks ./internal/services IOrdersService
+
+mockgen -destination=internal/mocks/mock_services_orders_queue.go -package=mocks ./internal/services OrdersQueue
+
 echo "Finish"
