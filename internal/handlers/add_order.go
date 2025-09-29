@@ -4,14 +4,11 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"regexp"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 	"github.com/aleksandrpnshkn/gophermart/internal/services"
 	"go.uber.org/zap"
 )
-
-const orderNumberRegexPattern = "^[0-9]+$"
 
 func AddOrder(
 	responser *services.Responser,
@@ -37,17 +34,11 @@ func AddOrder(
 		}
 		defer req.Body.Close()
 
-		isValidOrderNumber, err := regexp.Match(orderNumberRegexPattern, rawOrderNumber)
-		if err != nil {
-			logger.Error("failed to validate order number", zap.Error(err))
-			responser.WriteInternalServerError(ctx, res)
-			return
-		}
-		if !isValidOrderNumber {
+		orderNumber := string(rawOrderNumber)
+		if !services.IsValidLuhnNumber(orderNumber) {
 			responser.WriteEmptyValidationError(ctx, res)
 			return
 		}
-		orderNumber := string(rawOrderNumber)
 
 		order, err := ordersService.Add(ctx, orderNumber, user)
 		if err != nil {

@@ -53,8 +53,9 @@ func Run(
 		router.Use(middlewares.NewAuthMiddleware(logger, auther))
 
 		router.Post("/api/user/orders", handlers.AddOrder(responser, auther, logger, ordersService, ordersQueue))
-
 		router.Get("/api/user/orders", handlers.GetUserOrders(responser, auther, logger, ordersService))
+
+		// router.Get("/api/user/balance", handlers.GetUserBalance(responser, auther, logger, ordersService))
 	})
 
 	logger.Info("running app...")

@@ -51,7 +51,7 @@ func TestAddOrder(t *testing.T) {
 			HandlerFunc(handler).
 			Post("/api/user/orders").
 			ContentType("text/plain").
-			Body("12345").
+			Body("125").
 			Expect(t).
 			Status(http.StatusAccepted).
 			End()
@@ -100,7 +100,7 @@ func TestAddOrder(t *testing.T) {
 			HandlerFunc(handler).
 			Post("/api/user/orders").
 			ContentType("text/plain").
-			Body("12345").
+			Body("125").
 			Expect(t).
 			Status(http.StatusOK).
 			End()
@@ -128,7 +128,7 @@ func TestAddOrder(t *testing.T) {
 			HandlerFunc(handler).
 			Post("/api/user/orders").
 			ContentType("text/plain").
-			Body("12345").
+			Body("125").
 			Expect(t).
 			Status(http.StatusConflict).
 			End()
