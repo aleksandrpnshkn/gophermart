@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -27,7 +26,7 @@ func TestRegister(t *testing.T) {
 	t.Run("invalid data format", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 
-		handler := Register(context.Background(), responser, validate, auther, logger)
+		handler := Register(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -40,7 +39,7 @@ func TestRegister(t *testing.T) {
 	t.Run("invalid data", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 
-		handler := Register(context.Background(), responser, validate, auther, logger)
+		handler := Register(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -77,7 +76,7 @@ func TestRegister(t *testing.T) {
 			RegisterUser(gomock.Any(), "admin", "secret").
 			Return(user, rawToken, nil)
 
-		handler := Register(context.Background(), responser, validate, auther, logger)
+		handler := Register(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -99,7 +98,7 @@ func TestRegister(t *testing.T) {
 			RegisterUser(gomock.Any(), "admin", "secret").
 			Return(models.User{}, types.RawToken(""), services.ErrLoginAlreadyExists)
 
-		handler := Register(context.Background(), responser, validate, auther, logger)
+		handler := Register(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).

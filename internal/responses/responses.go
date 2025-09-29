@@ -27,6 +27,13 @@ type (
 	BoolResponse struct {
 		Result bool `json:"result"`
 	}
+
+	Order struct {
+		OrderNumber string  `json:"number"`
+		Status      string  `json:"status"`
+		Accrual     float64 `json:"accrual,omitempty"`
+		UploadedAt  string  `json:"uploaded_at"`
+	}
 )
 
 func newErrorResponse(message string) ErrorResponse {

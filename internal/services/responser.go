@@ -21,6 +21,10 @@ func (r *Responser) WriteSuccess(ctx context.Context, res http.ResponseWriter) {
 	}
 }
 
+func (r *Responser) WriteNoContent(ctx context.Context, res http.ResponseWriter) {
+	res.WriteHeader(http.StatusNoContent)
+}
+
 func (r *Responser) WriteConflict(ctx context.Context, res http.ResponseWriter) {
 	r.writeError(ctx, res, http.StatusConflict, "conflict")
 }

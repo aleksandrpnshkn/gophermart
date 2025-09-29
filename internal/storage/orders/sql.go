@@ -42,6 +42,48 @@ func (s *SQLStorage) GetByNumber(
 	return order, nil
 }
 
+func (s *SQLStorage) GetUserOrders(
+	ctx context.Context,
+	user models.User,
+) ([]models.Order, error) {
+	orders := []models.Order{}
+
+	rows, err := s.pgxpool.Query(ctx, `
+        SELECT number, user_id, status, accrual, uploaded_at 
+        FROM orders 
+        WHERE user_id = $1
+        ORDER BY uploaded_at DESC
+    `, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var order models.Order
+
+		err = rows.Scan(
+			&order.OrderNumber,
+			&order.UserID,
+			&order.Status,
+			&order.Accrual,
+			&order.UploadedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		orders = append(orders, order)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
 func (s *SQLStorage) Create(ctx context.Context, order models.Order) error {
 	_, err := s.pgxpool.Exec(ctx, `
         INSERT INTO orders (number, user_id, status, accrual, uploaded_at) 

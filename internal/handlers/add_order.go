@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -15,7 +14,6 @@ import (
 const orderNumberRegexPattern = "^[0-9]+$"
 
 func AddOrder(
-	ctx context.Context,
 	responser *services.Responser,
 	auther services.Auther,
 	logger *zap.Logger,
@@ -23,7 +21,9 @@ func AddOrder(
 	ordersQueue services.OrdersQueue,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		user, err := auther.FromUserContext(req.Context())
+		ctx := req.Context()
+
+		user, err := auther.FromUserContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)

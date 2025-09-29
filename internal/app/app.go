@@ -46,13 +46,15 @@ func Run(
 
 	router.Get("/api/ping", handlers.Ping())
 
-	router.Post("/api/user/login", handlers.Login(ctx, responser, validate, auther, logger))
-	router.Post("/api/user/register", handlers.Register(ctx, responser, validate, auther, logger))
+	router.Post("/api/user/login", handlers.Login(responser, validate, auther, logger))
+	router.Post("/api/user/register", handlers.Register(responser, validate, auther, logger))
 
 	router.Group(func(router chi.Router) {
 		router.Use(middlewares.NewAuthMiddleware(logger, auther))
 
-		router.Post("/api/user/orders", handlers.AddOrder(ctx, responser, auther, logger, ordersService, ordersQueue))
+		router.Post("/api/user/orders", handlers.AddOrder(responser, auther, logger, ordersService, ordersQueue))
+
+		router.Get("/api/user/orders", handlers.GetUserOrders(responser, auther, logger, ordersService))
 	})
 
 	logger.Info("running app...")

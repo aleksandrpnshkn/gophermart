@@ -84,6 +84,21 @@ func (mr *MockOrdersStorageMockRecorder) GetByNumber(ctx, orderNumber any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByNumber", reflect.TypeOf((*MockOrdersStorage)(nil).GetByNumber), ctx, orderNumber)
 }
 
+// GetUserOrders mocks base method.
+func (m *MockOrdersStorage) GetUserOrders(ctx context.Context, user models.User) ([]models.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserOrders", ctx, user)
+	ret0, _ := ret[0].([]models.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserOrders indicates an expected call of GetUserOrders.
+func (mr *MockOrdersStorageMockRecorder) GetUserOrders(ctx, user any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOrders", reflect.TypeOf((*MockOrdersStorage)(nil).GetUserOrders), ctx, user)
+}
+
 // Ping mocks base method.
 func (m *MockOrdersStorage) Ping(ctx context.Context) error {
 	m.ctrl.T.Helper()

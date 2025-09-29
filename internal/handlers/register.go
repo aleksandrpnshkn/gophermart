@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -16,7 +15,6 @@ import (
 )
 
 func Register(
-	ctx context.Context,
 	responser *services.Responser,
 	validate *validator.Validate,
 	auther services.Auther,

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -27,7 +26,7 @@ func TestLogin(t *testing.T) {
 	t.Run("invalid data format", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 
-		handler := Login(context.Background(), responser, validate, auther, logger)
+		handler := Login(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -40,7 +39,7 @@ func TestLogin(t *testing.T) {
 	t.Run("invalid data", func(t *testing.T) {
 		auther := mocks.NewMockAuther(ctrl)
 
-		handler := Login(context.Background(), responser, validate, auther, logger)
+		handler := Login(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -77,7 +76,7 @@ func TestLogin(t *testing.T) {
 			LoginUser(gomock.Any(), "admin", "secret").
 			Return(existedUser, rawToken, nil)
 
-		handler := Login(context.Background(), responser, validate, auther, logger)
+		handler := Login(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -99,7 +98,7 @@ func TestLogin(t *testing.T) {
 			LoginUser(gomock.Any(), "admin", "secret").
 			Return(models.User{}, types.RawToken(""), services.ErrBadCredentials)
 
-		handler := Login(context.Background(), responser, validate, auther, logger)
+		handler := Login(responser, validate, auther, logger)
 
 		apitest.New().
 			HandlerFunc(handler).

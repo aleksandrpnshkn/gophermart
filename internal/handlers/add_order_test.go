@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -46,7 +45,7 @@ func TestAddOrder(t *testing.T) {
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 		ordersQueue.EXPECT().Add(gomock.Any(), gomock.Any()).Return(nil)
 
-		handler := AddOrder(context.Background(), responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -67,7 +66,7 @@ func TestAddOrder(t *testing.T) {
 		ordersService := mocks.NewMockIOrdersService(ctrl)
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 
-		handler := AddOrder(context.Background(), responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -95,7 +94,7 @@ func TestAddOrder(t *testing.T) {
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 
-		handler := AddOrder(context.Background(), responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -123,7 +122,7 @@ func TestAddOrder(t *testing.T) {
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 
-		handler := AddOrder(context.Background(), responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).

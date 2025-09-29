@@ -16,6 +16,10 @@ type IOrdersService interface {
 	Add(ctx context.Context, orderNumber string, user models.User) (models.Order, error)
 
 	UpdateAccrual(ctx context.Context, order models.Order) (models.Order, error)
+
+	GetUserOrders(ctx context.Context, user models.User) ([]models.Order, error)
+
+	HasProcessedStatus(order models.Order) bool
 }
 
 type OrdersService struct {
@@ -106,6 +110,23 @@ func (o *OrdersService) UpdateAccrual(
 	}
 
 	return order, nil
+}
+
+func (o *OrdersService) GetUserOrders(
+	ctx context.Context,
+	user models.User,
+) ([]models.Order, error) {
+	orders, err := o.ordersStorage.GetUserOrders(ctx, user)
+	if err != nil {
+		return []models.Order{}, err
+	}
+
+	return orders, nil
+}
+
+func (o *OrdersService) HasProcessedStatus(order models.Order) bool {
+	return order.Status == types.OrderStatusProcessed ||
+		order.Status == types.OrderStatusInvalid
 }
 
 func NewOrdersService(

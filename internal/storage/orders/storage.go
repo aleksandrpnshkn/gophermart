@@ -12,6 +12,8 @@ type Storage interface {
 
 	GetByNumber(ctx context.Context, orderNumber string) (models.Order, error)
 
+	GetUserOrders(ctx context.Context, user models.User) ([]models.Order, error)
+
 	Create(ctx context.Context, order models.Order) error
 
 	Update(ctx context.Context, order models.Order) error

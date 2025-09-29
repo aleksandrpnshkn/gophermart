@@ -56,6 +56,35 @@ func (mr *MockIOrdersServiceMockRecorder) Add(ctx, orderNumber, user any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockIOrdersService)(nil).Add), ctx, orderNumber, user)
 }
 
+// GetUserOrders mocks base method.
+func (m *MockIOrdersService) GetUserOrders(ctx context.Context, user models.User) ([]models.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserOrders", ctx, user)
+	ret0, _ := ret[0].([]models.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserOrders indicates an expected call of GetUserOrders.
+func (mr *MockIOrdersServiceMockRecorder) GetUserOrders(ctx, user any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserOrders", reflect.TypeOf((*MockIOrdersService)(nil).GetUserOrders), ctx, user)
+}
+
+// HasProcessedStatus mocks base method.
+func (m *MockIOrdersService) HasProcessedStatus(order models.Order) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasProcessedStatus", order)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasProcessedStatus indicates an expected call of HasProcessedStatus.
+func (mr *MockIOrdersServiceMockRecorder) HasProcessedStatus(order any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasProcessedStatus", reflect.TypeOf((*MockIOrdersService)(nil).HasProcessedStatus), order)
+}
+
 // UpdateAccrual mocks base method.
 func (m *MockIOrdersService) UpdateAccrual(ctx context.Context, order models.Order) (models.Order, error) {
 	m.ctrl.T.Helper()
