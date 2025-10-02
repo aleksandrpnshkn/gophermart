@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateShortBatch(t *testing.T) {
+func TestIsValidLuhnNumber(t *testing.T) {
 	tests := []struct {
 		testName string
 		number   string

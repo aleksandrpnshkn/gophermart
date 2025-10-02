@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/models"
+	"github.com/aleksandrpnshkn/gophermart/internal/storage/balance"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -84,7 +85,10 @@ func (s *SQLStorage) GetUserOrders(
 	return orders, nil
 }
 
-func (s *SQLStorage) Create(ctx context.Context, order models.Order) error {
+func (s *SQLStorage) Create(
+	ctx context.Context,
+	order models.Order,
+) (models.Order, error) {
 	_, err := s.pgxpool.Exec(ctx, `
         INSERT INTO orders (number, user_id, status, accrual, uploaded_at) 
         VALUES (@number, @user_id, @status, @accrual, @uploaded_at)
@@ -97,31 +101,52 @@ func (s *SQLStorage) Create(ctx context.Context, order models.Order) error {
 	})
 
 	if err == nil {
-		return nil
+		return order, nil
 	}
 
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code != pgerrcode.UniqueViolation {
-		return err
+		return models.Order{}, err
 	}
 
 	existedOrder, err := s.GetByNumber(ctx, order.OrderNumber)
 	if err != nil {
-		return err
+		return models.Order{}, err
 	}
 
 	if existedOrder.UserID != order.UserID {
-		return ErrOrderAlreadyCreatedByAnotherUser
+		return models.Order{}, ErrOrderAlreadyCreatedByAnotherUser
 	}
 
-	return ErrOrderAlreadyCreated
+	return existedOrder, ErrOrderAlreadyCreated
 }
 
-func (s *SQLStorage) Update(
+func (s *SQLStorage) UpdateStatus(
 	ctx context.Context,
 	order models.Order,
 ) error {
 	_, err := s.pgxpool.Exec(ctx, `
+        UPDATE orders 
+        SET status = @status
+        WHERE number = @number
+    `, pgx.NamedArgs{
+		"number": order.OrderNumber,
+		"status": order.Status,
+	})
+	return err
+}
+
+func (s *SQLStorage) UpdateAccrual(
+	ctx context.Context,
+	order models.Order,
+) error {
+	tx, err := s.pgxpool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, `
         UPDATE orders 
         SET status = @status, accrual = @accrual
         WHERE number = @number
@@ -130,7 +155,20 @@ func (s *SQLStorage) Update(
 		"status":  order.Status,
 		"accrual": order.Accrual,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, balance.ChangeBalanceQuery, pgx.NamedArgs{
+		"order_number": order.OrderNumber,
+		"user_id":      order.UserID,
+		"amount":       order.Accrual,
+	})
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (s *SQLStorage) Close() error {

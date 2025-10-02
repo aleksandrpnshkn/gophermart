@@ -21,5 +21,9 @@ func NewValidate(uni *AppUni) *validator.Validate {
 		return name
 	})
 
+	validate.RegisterValidation("luhn", func(fl validator.FieldLevel) bool {
+		return IsValidLuhnNumber(fl.Field().String())
+	})
+
 	return validate
 }

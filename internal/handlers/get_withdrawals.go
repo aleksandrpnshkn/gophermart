@@ -10,14 +10,15 @@ import (
 	"go.uber.org/zap"
 )
 
-func GetUserOrders(
+func GetWithdrawals(
 	responser *services.Responser,
 	auther services.Auther,
+	balancer services.IBalancer,
 	logger *zap.Logger,
-	ordersService services.IOrdersService,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
+
 		user, err := auther.FromUserContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
@@ -25,40 +26,25 @@ func GetUserOrders(
 			return
 		}
 
-		orders, err := ordersService.GetUserOrders(ctx, user)
+		withdrawals, err := balancer.GetWithdrawals(ctx, user)
 		if err != nil {
-			logger.Error("failed to get user orders",
-				zap.Int64("user_id", user.ID),
-				zap.Error(err),
-			)
+			logger.Error("failed to get user withdrawals", zap.Error(err))
 			responser.WriteInternalServerError(ctx, res)
 			return
 		}
 
-		if len(orders) == 0 {
-			responser.WriteNoContent(ctx, res)
-			return
-		}
-
-		responseData := []responses.Order{}
-
-		for _, order := range orders {
-			orderData := responses.Order{
-				OrderNumber: order.OrderNumber,
-				Status:      string(order.Status),
-				UploadedAt:  order.UploadedAt.Format(time.RFC3339),
-			}
-
-			if ordersService.HasProcessedStatus(order) {
-				orderData.Accrual, _ = order.Accrual.Float64()
-			}
-
-			responseData = append(responseData, orderData)
+		responseData := []responses.Withdraw{}
+		for _, balanceChange := range withdrawals {
+			responseData = append(responseData, responses.Withdraw{
+				OrderNumber: balanceChange.OrderNumber,
+				Sum:         balanceChange.Amount.Abs().InexactFloat64(),
+				ProcessedAt: balanceChange.ProcessedAt.Format(time.RFC3339),
+			})
 		}
 
 		rawResponseData, err := json.Marshal(responseData)
 		if err != nil {
-			logger.Error("failed to marshal user orders",
+			logger.Error("failed to marshal user balance",
 				zap.Int64("user_id", user.ID),
 				zap.Error(err),
 			)

@@ -56,11 +56,12 @@ func (mr *MockOrdersStorageMockRecorder) Close() *gomock.Call {
 }
 
 // Create mocks base method.
-func (m *MockOrdersStorage) Create(ctx context.Context, order models.Order) error {
+func (m *MockOrdersStorage) Create(ctx context.Context, order models.Order) (models.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, order)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(models.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
@@ -113,16 +114,30 @@ func (mr *MockOrdersStorageMockRecorder) Ping(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockOrdersStorage)(nil).Ping), ctx)
 }
 
-// Update mocks base method.
-func (m *MockOrdersStorage) Update(ctx context.Context, order models.Order) error {
+// UpdateAccrual mocks base method.
+func (m *MockOrdersStorage) UpdateAccrual(ctx context.Context, order models.Order) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, order)
+	ret := m.ctrl.Call(m, "UpdateAccrual", ctx, order)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Update indicates an expected call of Update.
-func (mr *MockOrdersStorageMockRecorder) Update(ctx, order any) *gomock.Call {
+// UpdateAccrual indicates an expected call of UpdateAccrual.
+func (mr *MockOrdersStorageMockRecorder) UpdateAccrual(ctx, order any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOrdersStorage)(nil).Update), ctx, order)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAccrual", reflect.TypeOf((*MockOrdersStorage)(nil).UpdateAccrual), ctx, order)
+}
+
+// UpdateStatus mocks base method.
+func (m *MockOrdersStorage) UpdateStatus(ctx context.Context, order models.Order) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, order)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus.
+func (mr *MockOrdersStorageMockRecorder) UpdateStatus(ctx, order any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockOrdersStorage)(nil).UpdateStatus), ctx, order)
 }

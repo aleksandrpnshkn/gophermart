@@ -11,7 +11,11 @@ import (
 
 const AuthCookieName = "auth_token"
 
-func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Handler) http.Handler {
+func NewAuthMiddleware(
+    responser *services.Responser,
+    logger *zap.Logger, 
+    auther services.Auther,     
+) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
@@ -19,7 +23,7 @@ func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Han
 			authCookie, err := req.Cookie(AuthCookieName)
 			if err != nil && err != http.ErrNoCookie {
 				logger.Error("unknown cookie error", zap.Error(err))
-				res.WriteHeader(http.StatusInternalServerError)
+				responser.WriteInternalServerError(ctx, res)
 				return
 			}
 
@@ -37,7 +41,7 @@ func NewAuthMiddleware(logger *zap.Logger, auther services.Auther) func(http.Han
 					return
 				} else {
 					logger.Error("failed to parse token", zap.Error(err))
-					res.WriteHeader(http.StatusInternalServerError)
+					responser.WriteInternalServerError(ctx, res)
 					return
 				}
 			}

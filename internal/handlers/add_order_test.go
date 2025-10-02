@@ -39,7 +39,7 @@ func TestAddOrder(t *testing.T) {
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
-			Return(nil)
+			Return(models.Order{}, nil)
 		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
@@ -89,7 +89,7 @@ func TestAddOrder(t *testing.T) {
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
-			Return(orders.ErrOrderAlreadyCreated)
+			Return(models.Order{}, orders.ErrOrderAlreadyCreated)
 		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
@@ -117,7 +117,7 @@ func TestAddOrder(t *testing.T) {
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
-			Return(orders.ErrOrderAlreadyCreatedByAnotherUser)
+			Return(models.Order{}, orders.ErrOrderAlreadyCreatedByAnotherUser)
 		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)

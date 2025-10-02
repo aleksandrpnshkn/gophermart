@@ -23,7 +23,7 @@ func AddOrder(
 		user, err := auther.FromUserContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
-			res.WriteHeader(http.StatusInternalServerError)
+			responser.WriteInternalServerError(ctx, res)
 			return
 		}
 

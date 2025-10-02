@@ -42,10 +42,10 @@ func (o *OrdersService) Add(ctx context.Context, orderNumber string, user models
 		UploadedAt:  time.Now(),
 	}
 
-	err := o.ordersStorage.Create(ctx, order)
+	order, err := o.ordersStorage.Create(ctx, order)
 	if err != nil {
 		if errors.Is(err, orders.ErrOrderAlreadyCreated) {
-			return models.Order{}, ErrOrderAlreadyCreated
+			return order, ErrOrderAlreadyCreated
 		}
 		if errors.Is(err, orders.ErrOrderAlreadyCreatedByAnotherUser) {
 			return models.Order{}, ErrOrderAlreadyCreatedByAnotherUser
@@ -62,7 +62,7 @@ func (o *OrdersService) UpdateAccrual(
 ) (models.Order, error) {
 	if order.Status == types.OrderStatusNew {
 		order.Status = types.OrderStatusProcessing
-		err := o.ordersStorage.Update(ctx, order)
+		err := o.ordersStorage.UpdateStatus(ctx, order)
 		if err != nil {
 			o.logger.Error("failed to set processing status",
 				zap.String("order_number", order.OrderNumber),
@@ -98,15 +98,27 @@ func (o *OrdersService) UpdateAccrual(
 		}
 	}
 
-	err := o.ordersStorage.Update(ctx, order)
-	if err != nil {
-		o.logger.Error("failed to update accrual",
-			zap.String("order_number", order.OrderNumber),
-			zap.String("order_status", string(order.Status)),
-			zap.String("accrual", order.Accrual.String()),
-			zap.Error(err),
-		)
-		return order, err
+	if order.Accrual.IsZero() {
+		err := o.ordersStorage.UpdateStatus(ctx, order)
+		if err != nil {
+			o.logger.Error("failed to set processed status",
+				zap.String("order_number", order.OrderNumber),
+				zap.String("order_status", string(order.Status)),
+				zap.Error(err),
+			)
+			return order, err
+		}
+	} else {
+		err := o.ordersStorage.UpdateAccrual(ctx, order)
+		if err != nil {
+			o.logger.Error("failed to update accrual",
+				zap.String("order_number", order.OrderNumber),
+				zap.String("order_status", string(order.Status)),
+				zap.String("accrual", order.Accrual.String()),
+				zap.Error(err),
+			)
+			return order, err
+		}
 	}
 
 	return order, nil

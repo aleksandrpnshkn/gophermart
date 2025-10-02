@@ -17,6 +17,9 @@ func TestAuthMiddleware(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	uni := services.NewAppUni()
+	responser := services.NewResponser(uni)
+
 	t.Run("client sent valid token", func(t *testing.T) {
 		testToken := types.RawToken("testToken")
 		testUser := models.User{
@@ -25,7 +28,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 		auther := mocks.NewMockAuther(ctrl)
 		auther.EXPECT().ParseToken(gomock.Any(), testToken).Return(testUser, nil)
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		handler := NewAuthMiddleware(responser, zap.NewExample(), auther)(testOkHandler())
 
 		apitest.New().
 			Handler(handler).
@@ -38,7 +41,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("client sent invalid token", func(t *testing.T) {
 		auther := services.NewAuther(mocks.NewMockUsersStorage(ctrl), "secretkey")
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		handler := NewAuthMiddleware(responser, zap.NewExample(), auther)(testOkHandler())
 
 		apitest.New().
 			Handler(handler).
@@ -51,7 +54,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	t.Run("client not sent token", func(t *testing.T) {
 		auther := services.NewAuther(mocks.NewMockUsersStorage(ctrl), "secretkey")
-		handler := NewAuthMiddleware(zap.NewExample(), auther)(testOkHandler())
+		handler := NewAuthMiddleware(responser, zap.NewExample(), auther)(testOkHandler())
 
 		apitest.New().
 			Handler(handler).

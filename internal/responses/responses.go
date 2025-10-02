@@ -34,6 +34,17 @@ type (
 		Accrual     float64 `json:"accrual,omitempty"`
 		UploadedAt  string  `json:"uploaded_at"`
 	}
+
+	Balance struct {
+		Current   float64 `json:"current"`
+		Withdrawn float64 `json:"withdrawn"`
+	}
+
+	Withdraw struct {
+		OrderNumber string  `json:"order"`
+		Sum         float64 `json:"sum"`
+		ProcessedAt string  `json:"processed_at"`
+	}
 )
 
 func newErrorResponse(message string) ErrorResponse {

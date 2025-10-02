@@ -14,9 +14,11 @@ type Storage interface {
 
 	GetUserOrders(ctx context.Context, user models.User) ([]models.Order, error)
 
-	Create(ctx context.Context, order models.Order) error
+	Create(ctx context.Context, order models.Order) (models.Order, error)
 
-	Update(ctx context.Context, order models.Order) error
+	UpdateStatus(ctx context.Context, order models.Order) error
+
+	UpdateAccrual(ctx context.Context, order models.Order) error
 
 	Close() error
 }

@@ -74,10 +74,42 @@ curl --request POST \
 # добавить заказ в обработку заказ
 curl --request POST \
     --header "Content-Type: text/plain" \
-    --cookie "auth_token=TOKEN" \
+    --cookie "auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjF9.pL0mBx3adBKYmOpgyObgX1jl2XoifJnpFhiKKs4wgO0" \
     --data '12345678903' \
     --include \
     localhost:8081/api/user/orders 
+
+# проверить баланс
+curl --request GET \
+    --header "Content-Type: application/json" \
+    --cookie "auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjF9.pL0mBx3adBKYmOpgyObgX1jl2XoifJnpFhiKKs4wgO0" \
+    --include \
+    localhost:8081/api/user/balance
+
+# оплатить заказ бонусами
+curl --request POST \
+    --header "Content-Type: application/json" \
+    --cookie "auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjF9.pL0mBx3adBKYmOpgyObgX1jl2XoifJnpFhiKKs4wgO0" \
+    --data '{"order": "12345678903", "sum": 123}' \
+    --include \
+    localhost:8081/api/user/balance/withdraw
+
+# проверить списания
+curl --request GET \
+    --header "Content-Type: application/json" \
+    --cookie "auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjF9.pL0mBx3adBKYmOpgyObgX1jl2XoifJnpFhiKKs4wgO0" \
+    --include \
+    localhost:8081/api/user/withdrawals
+```
+
+```sql
+# принудительно накинуть бонусов для тестов
+UPDATE orders 
+SET accrual = 1000
+WHERE number = '12345678903';
+
+INSERT INTO balance_logs (id, order_number, user_id, amount, processed_at) 
+VALUES (DEFAULT, '12345678903', 1, 1000, DEFAULT);
 ```
 
 ## accrual
