@@ -4,17 +4,20 @@ import (
 	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/app"
 	"github.com/aleksandrpnshkn/gophermart/internal/config"
 	"github.com/aleksandrpnshkn/gophermart/internal/logs"
-	"github.com/aleksandrpnshkn/gophermart/internal/storage"
 	"go.uber.org/zap"
 )
 
 func main() {
+	rootCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	config := config.New()
-	ctx := context.Background()
 
 	logger, err := logs.NewLogger(config.LogLevel)
 	if err != nil {
@@ -23,13 +26,7 @@ func main() {
 	}
 	defer logger.Sync()
 
-	storages, err := storage.NewStorages(ctx, config.DatabaseURI, logger)
-	if err != nil {
-		logger.Fatal("failed to init storages", zap.Error(err))
-	}
-	defer storages.Close()
-
-	err = app.Run(ctx, config, logger, storages)
+	err = app.Run(rootCtx, config, logger)
 	if err != nil {
 		logger.Fatal("failed to run app", zap.Error(err))
 	}

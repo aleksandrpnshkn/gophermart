@@ -18,10 +18,23 @@ type Storages struct {
 	Balance balance.Storage
 }
 
-func (s *Storages) Close() {
-	s.Orders.Close()
-	s.Users.Close()
-	s.Balance.Close()
+func (s *Storages) Close() error {
+	err := s.Orders.Close()
+	if err != nil {
+		return err
+	}
+
+	err = s.Users.Close()
+	if err != nil {
+		return err
+	}
+
+	err = s.Balance.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewStorages(

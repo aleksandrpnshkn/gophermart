@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/config"
 	"github.com/aleksandrpnshkn/gophermart/internal/handlers"
@@ -14,12 +15,24 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	shutdownTimeout = 20 * time.Second
+)
+
 func Run(
-	ctx context.Context,
+	rootCtx context.Context,
 	config *config.Config,
 	logger *zap.Logger,
-	storages *storage.Storages,
 ) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	storages, err := storage.NewStorages(ctx, config.DatabaseURI, logger)
+	if err != nil {
+		logger.Fatal("failed to init storages", zap.Error(err))
+	}
+	defer storages.Close()
+
 	router := chi.NewRouter()
 
 	uni := services.NewAppUni()
@@ -61,9 +74,44 @@ func Run(
 		router.Get("/api/user/withdrawals", handlers.GetWithdrawals(responser, auther, balancer, logger))
 	})
 
-	logger.Info("running app...")
+	server := http.Server{
+		Addr:    config.RunAddress,
+		Handler: router,
+	}
 
-	err := http.ListenAndServe(config.RunAddress, router)
+	go func() {
+		logger.Info("server listening...")
 
-	return err
+		err := server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			logger.Fatal("failed to run server", zap.Error(err))
+		}
+	}()
+
+	// ждать сигнала завершения
+	<-rootCtx.Done()
+	logger.Info("received shutdown signal, shutting down...")
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer shutdownCancel()
+	err = server.Shutdown(shutdownCtx)
+	if err != nil {
+		logger.Error("failed to shutdown server", zap.Error(err))
+		return err
+	}
+
+	logger.Info("canceling app context...")
+	cancel()
+
+	logger.Info("closing storages...")
+	err = storages.Close()
+	if err != nil {
+		logger.Error("failed to close storages", zap.Error(err))
+		return err
+	}
+
+	logger.Info("stopping orders queue...")
+	ordersQueue.Stop()
+
+	return nil
 }
