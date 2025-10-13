@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
@@ -60,7 +61,12 @@ func (a *AccrualService) GetAccrual(
 		zap.String("order_number", orderNumber),
 	)
 
-	res, err := a.client.Get(a.baseURL + "/api/orders/" + orderNumber)
+	accrualURL, err := url.JoinPath(a.baseURL, "/api/orders/", orderNumber)
+	if err != nil {
+		return zero, err
+	}
+
+	res, err := a.client.Get(accrualURL)
 	if err != nil {
 		return zero, err
 	}
