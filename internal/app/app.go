@@ -29,7 +29,7 @@ func Run(
 
 	storages, err := storage.NewStorages(ctx, config.DatabaseURI, logger)
 	if err != nil {
-		logger.Fatal("failed to init storages", zap.Error(err))
+		return err
 	}
 	defer storages.Close()
 
@@ -103,7 +103,7 @@ func Run(
 	logger.Info("canceling app context...")
 	cancel()
 
-	logger.Info("closing storages...")
+	logger.Info("closing storages manually...")
 	err = storages.Close()
 	if err != nil {
 		logger.Error("failed to close storages", zap.Error(err))

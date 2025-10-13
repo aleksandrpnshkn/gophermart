@@ -63,7 +63,7 @@ func NewStorages(
 
 	balanceStorage, err := balance.NewSQLStorage(ctx, databaseDSN)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init users SQL storage: %w", err)
+		return nil, fmt.Errorf("failed to init balance SQL storage: %w", err)
 	}
 
 	return &Storages{

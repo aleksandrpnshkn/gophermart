@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 	"os/signal"
 	"syscall"
 
@@ -21,8 +20,7 @@ func main() {
 
 	logger, err := logs.NewLogger(config.LogLevel)
 	if err != nil {
-		log.Printf("failed to create app logger: %v", err)
-		os.Exit(1)
+		log.Fatalf("failed to create app logger: %v", err)
 	}
 	defer logger.Sync()
 
