@@ -54,7 +54,7 @@ func (a *JwtAuther) ParseToken(ctx context.Context, tokenString types.RawToken) 
 
 	user, err := a.usersStorage.GetByID(ctx, claims.UserID)
 	if err != nil {
-		if err == users.ErrUserNotFound {
+		if errors.Is(err, users.ErrUserNotFound) {
 			return models.User{}, ErrInvalidToken
 		} else {
 			return models.User{}, err

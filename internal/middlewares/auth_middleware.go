@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/models"
@@ -12,31 +13,31 @@ import (
 const AuthCookieName = "auth_token"
 
 func NewAuthMiddleware(
-    responser *services.Responser,
-    logger *zap.Logger, 
-    auther services.Auther,     
+	responser *services.Responser,
+	logger *zap.Logger,
+	auther services.Auther,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
 
 			authCookie, err := req.Cookie(AuthCookieName)
-			if err != nil && err != http.ErrNoCookie {
-				logger.Error("unknown cookie error", zap.Error(err))
-				responser.WriteInternalServerError(ctx, res)
-				return
+			if err != nil {
+				if errors.Is(err, http.ErrNoCookie) {
+					res.WriteHeader(http.StatusUnauthorized)
+					return
+				} else {
+					logger.Error("unknown cookie error", zap.Error(err))
+					responser.WriteInternalServerError(ctx, res)
+					return
+				}
 			}
 
 			var user models.User
 
-			if err == http.ErrNoCookie {
-				res.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-
 			user, err = auther.ParseToken(ctx, types.RawToken(authCookie.Value))
 			if err != nil {
-				if err == services.ErrInvalidToken {
+				if errors.Is(err, services.ErrInvalidToken) {
 					res.WriteHeader(http.StatusUnauthorized)
 					return
 				} else {

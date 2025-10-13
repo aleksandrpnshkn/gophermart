@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/models"
 )
@@ -26,7 +27,8 @@ func (p *GetAccrualProcessor) Process(
 ) (models.Order, error) {
 	order, err := p.ordersService.UpdateAccrual(ctx, order)
 	if err != nil {
-		if err == ErrAccrualNotProcessedStatus || err == ErrAccrualFailedToGet {
+		if errors.Is(err, ErrAccrualNotProcessedStatus) ||
+			errors.Is(err, ErrAccrualFailedToGet) {
 			return order, ErrJobRetry
 		}
 
