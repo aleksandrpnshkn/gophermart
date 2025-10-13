@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"errors"
+	"net"
 	"net/http"
 	"time"
 
@@ -24,10 +26,10 @@ func Run(
 	config *config.Config,
 	logger *zap.Logger,
 ) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	appCtx, appCancel := context.WithCancel(context.Background())
+	defer appCancel()
 
-	storages, err := storage.NewStorages(ctx, config.DatabaseURI, logger)
+	storages, err := storage.NewStorages(appCtx, config.DatabaseURI, logger)
 	if err != nil {
 		return err
 	}
@@ -46,7 +48,7 @@ func Run(
 
 	ordersProceessor := services.NewOrdersProcessor(ordersService)
 	ordersQueue := services.NewOrdersQueue(
-		ctx,
+		appCtx,
 		ordersProceessor,
 		logger,
 	)
@@ -77,6 +79,9 @@ func Run(
 	server := http.Server{
 		Addr:    config.RunAddress,
 		Handler: router,
+		BaseContext: func(l net.Listener) context.Context {
+			return appCtx
+		},
 	}
 
 	go func() {
@@ -84,13 +89,17 @@ func Run(
 
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			logger.Fatal("failed to run server", zap.Error(err))
+			logger.Error("failed to run server", zap.Error(err))
+			appCancel()
 		}
 	}()
 
-	// ждать сигнала завершения
-	<-rootCtx.Done()
-	logger.Info("received shutdown signal, shutting down...")
+	select {
+	case <-appCtx.Done():
+		return errors.New("app context prematurely cancelled")
+	case <-rootCtx.Done():
+		logger.Info("received shutdown signal, shutting down...")
+	}
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer shutdownCancel()
@@ -100,8 +109,8 @@ func Run(
 		return err
 	}
 
-	logger.Info("canceling app context...")
-	cancel()
+	logger.Info("canceling app context manually...")
+	appCancel()
 
 	logger.Info("closing storages manually...")
 	err = storages.Close()
