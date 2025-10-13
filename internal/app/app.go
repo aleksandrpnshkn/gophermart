@@ -85,7 +85,9 @@ func Run(
 	}
 
 	go func() {
-		logger.Info("server listening...")
+		logger.Info("server listening...",
+			zap.String("addr", config.RunAddress),
+		)
 
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
