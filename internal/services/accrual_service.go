@@ -12,10 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type IAccrualService interface {
-	GetAccrual(ctx context.Context, orderNumber string) (decimal.Decimal, error)
-}
-
 type AccrualService struct {
 	client  *http.Client
 	baseURL string

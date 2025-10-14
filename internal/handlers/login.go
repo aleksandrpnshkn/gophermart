@@ -1,23 +1,30 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/middlewares"
+	"github.com/aleksandrpnshkn/gophermart/internal/models"
 	"github.com/aleksandrpnshkn/gophermart/internal/requests"
 	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 	"github.com/aleksandrpnshkn/gophermart/internal/services"
+	"github.com/aleksandrpnshkn/gophermart/internal/types"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
 
+type UserLoginer interface {
+	LoginUser(ctx context.Context, login string, password string) (models.User, types.RawToken, error)
+}
+
 func Login(
 	responser *services.Responser,
 	validate *validator.Validate,
-	auther services.Auther,
+	userLoginer UserLoginer,
 	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -43,7 +50,7 @@ func Login(
 			return
 		}
 
-		_, rawToken, err := auther.LoginUser(ctx, requestData.Login, requestData.Password)
+		_, rawToken, err := userLoginer.LoginUser(ctx, requestData.Login, requestData.Password)
 		if err != nil {
 			if errors.Is(err, services.ErrBadCredentials) {
 				responser.WriteUnauthorizedError(ctx, res)

@@ -30,9 +30,9 @@ func TestGetWithdrawals(t *testing.T) {
 	}
 
 	t.Run("get user withdrawals", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReceiver := mocks.NewMockUserReceiver(ctrl)
+		userReceiver.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
 		loc, _ := time.LoadLocation("Europe/Moscow")
@@ -45,12 +45,12 @@ func TestGetWithdrawals(t *testing.T) {
 			},
 		}
 
-		balancer := mocks.NewMockIBalancer(ctrl)
-		balancer.EXPECT().
+		withdrawer := mocks.NewMockWithdrawer(ctrl)
+		withdrawer.EXPECT().
 			GetWithdrawals(gomock.Any(), user).
 			Return(withdrawals, nil)
 
-		handler := GetWithdrawals(responser, auther, balancer, logger)
+		handler := GetWithdrawals(responser, userReceiver, withdrawer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).

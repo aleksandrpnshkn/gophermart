@@ -12,21 +12,21 @@ import (
 
 func GetWithdrawals(
 	responser *services.Responser,
-	auther services.Auther,
-	balancer services.IBalancer,
+	userReceiver UserReceiver,
+	withdrawer Withdrawer,
 	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		user, err := auther.FromUserContext(ctx)
+		user, err := userReceiver.FromContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			responser.WriteInternalServerError(ctx, res)
 			return
 		}
 
-		withdrawals, err := balancer.GetWithdrawals(ctx, user)
+		withdrawals, err := withdrawer.GetWithdrawals(ctx, user)
 		if err != nil {
 			logger.Error("failed to get user withdrawals", zap.Error(err))
 			responser.WriteInternalServerError(ctx, res)

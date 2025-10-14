@@ -9,9 +9,10 @@ import (
 	"go.uber.org/zap"
 )
 
-type OrdersQueue interface {
-	Add(ctx context.Context, order models.Order) error
-	Stop()
+type OrderJobProcessor interface {
+	GetName() string
+
+	Process(ctx context.Context, order models.Order) (models.Order, error)
 }
 
 type MemoryOrdersQueue struct {

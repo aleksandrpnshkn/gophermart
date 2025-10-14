@@ -24,9 +24,9 @@ func TestLogin(t *testing.T) {
 	logger := zap.NewExample()
 
 	t.Run("invalid data format", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
+		userLoginer := mocks.NewMockUserLoginer(ctrl)
 
-		handler := Login(responser, validate, auther, logger)
+		handler := Login(responser, validate, userLoginer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -37,9 +37,9 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("invalid data", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
+		userLoginer := mocks.NewMockUserLoginer(ctrl)
 
-		handler := Login(responser, validate, auther, logger)
+		handler := Login(responser, validate, userLoginer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -71,12 +71,12 @@ func TestLogin(t *testing.T) {
 		}
 		rawToken := types.RawToken("token")
 
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
+		userLoginer := mocks.NewMockUserLoginer(ctrl)
+		userLoginer.EXPECT().
 			LoginUser(gomock.Any(), "admin", "secret").
 			Return(existedUser, rawToken, nil)
 
-		handler := Login(responser, validate, auther, logger)
+		handler := Login(responser, validate, userLoginer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -93,12 +93,12 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("user not found", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
+		userLoginer := mocks.NewMockUserLoginer(ctrl)
+		userLoginer.EXPECT().
 			LoginUser(gomock.Any(), "admin", "secret").
 			Return(models.User{}, types.RawToken(""), services.ErrBadCredentials)
 
-		handler := Login(responser, validate, auther, logger)
+		handler := Login(responser, validate, userLoginer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).

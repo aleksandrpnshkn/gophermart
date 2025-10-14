@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -12,10 +13,14 @@ import (
 
 const AuthCookieName = "auth_token"
 
+type TokenParser interface {
+	ParseToken(ctx context.Context, token types.RawToken) (models.User, error)
+}
+
 func NewAuthMiddleware(
 	responser *services.Responser,
 	logger *zap.Logger,
-	auther services.Auther,
+	tokenParser TokenParser,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
@@ -35,7 +40,7 @@ func NewAuthMiddleware(
 
 			var user models.User
 
-			user, err = auther.ParseToken(ctx, types.RawToken(authCookie.Value))
+			user, err = tokenParser.ParseToken(ctx, types.RawToken(authCookie.Value))
 			if err != nil {
 				if errors.Is(err, services.ErrInvalidToken) {
 					res.WriteHeader(http.StatusUnauthorized)

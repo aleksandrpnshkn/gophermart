@@ -12,20 +12,14 @@ import (
 	"go.uber.org/zap"
 )
 
-type IOrdersService interface {
-	Add(ctx context.Context, orderNumber string, user models.User) (models.Order, error)
-
-	UpdateAccrual(ctx context.Context, order models.Order) (models.Order, error)
-
-	GetUserOrders(ctx context.Context, user models.User) ([]models.Order, error)
-
-	HasProcessedStatus(order models.Order) bool
+type Accrualer interface {
+	GetAccrual(ctx context.Context, orderNumber string) (decimal.Decimal, error)
 }
 
 type OrdersService struct {
-	ordersStorage  orders.Storage
-	accrualService IAccrualService
-	logger         *zap.Logger
+	ordersStorage orders.Storage
+	accrualer     Accrualer
+	logger        *zap.Logger
 }
 
 var (
@@ -81,7 +75,7 @@ func (o *OrdersService) UpdateAccrual(
 	}
 
 	if order.Accrual.IsZero() {
-		accrual, err := o.accrualService.GetAccrual(ctx, order.OrderNumber)
+		accrual, err := o.accrualer.GetAccrual(ctx, order.OrderNumber)
 		if err != nil && !errors.Is(err, ErrAccrualInvalidStatus) {
 			o.logger.Error("failed to get accrual",
 				zap.String("order_number", order.OrderNumber),
@@ -143,12 +137,12 @@ func (o *OrdersService) HasProcessedStatus(order models.Order) bool {
 
 func NewOrdersService(
 	ordersStorage orders.Storage,
-	accrualService IAccrualService,
+	accrualer Accrualer,
 	logger *zap.Logger,
 ) *OrdersService {
 	return &OrdersService{
-		ordersStorage:  ordersStorage,
-		accrualService: accrualService,
-		logger:         logger,
+		ordersStorage: ordersStorage,
+		accrualer:     accrualer,
+		logger:        logger,
 	}
 }

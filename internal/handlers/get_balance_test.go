@@ -29,9 +29,9 @@ func TestGetBalance(t *testing.T) {
 	}
 
 	t.Run("get user balance", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReciever := mocks.NewMockUserReceiver(ctrl)
+		userReciever.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
 		balance := models.Balance{
@@ -39,12 +39,12 @@ func TestGetBalance(t *testing.T) {
 			Withdrawn: decimal.NewFromInt(42),
 		}
 
-		balancer := mocks.NewMockIBalancer(ctrl)
+		balancer := mocks.NewMockBalancer(ctrl)
 		balancer.EXPECT().
 			GetBalance(gomock.Any(), user).
 			Return(balance, nil)
 
-		handler := GetBalance(responser, auther, balancer, logger)
+		handler := GetBalance(responser, userReciever, balancer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).

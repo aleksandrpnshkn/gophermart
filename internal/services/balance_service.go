@@ -10,32 +10,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type IBalancer interface {
-	Withdraw(
-		ctx context.Context,
-		orderNumber string,
-		amountRaw float64,
-		user models.User,
-	) error
-
-	GetBalance(ctx context.Context, user models.User) (models.Balance, error)
-
-	GetWithdrawals(ctx context.Context, user models.User) ([]models.BalanceChange, error)
-}
-
 var (
 	ErrBalanceNotEnoughFunds = errors.New("not enough funds on user balance")
 	ErrBalanceBadPrecision   = errors.New("amount contains more than two digits after the dot")
 	ErrBalanceNegativeAmount = errors.New("cannot withdraw negative or zero amount")
 )
 
-type Balancer struct {
-	ordersService  IOrdersService
+type OrderAdder interface {
+	Add(ctx context.Context, orderNumber string, user models.User) (models.Order, error)
+}
+
+type BalanceService struct {
+	ordersAdder    OrderAdder
 	balanceStorage balancePackage.Storage
 	logger         *zap.Logger
 }
 
-func (b *Balancer) Withdraw(
+func (b *BalanceService) Withdraw(
 	ctx context.Context,
 	orderNumber string,
 	sumRaw float64,
@@ -58,7 +49,7 @@ func (b *Balancer) Withdraw(
 		return ErrBalanceNotEnoughFunds
 	}
 
-	order, err := b.ordersService.Add(ctx, orderNumber, user)
+	order, err := b.ordersAdder.Add(ctx, orderNumber, user)
 	if err != nil && !errors.Is(err, ErrOrderAlreadyCreated) {
 		b.logger.Error("failed to add order for withdrawal", zap.Error(err))
 		return err
@@ -82,14 +73,14 @@ func (b *Balancer) Withdraw(
 	return nil
 }
 
-func (b *Balancer) GetBalance(
+func (b *BalanceService) GetBalance(
 	ctx context.Context,
 	user models.User,
 ) (models.Balance, error) {
 	return b.balanceStorage.GetBalance(ctx, user)
 }
 
-func (b *Balancer) GetWithdrawals(
+func (b *BalanceService) GetWithdrawals(
 	ctx context.Context,
 	user models.User,
 ) ([]models.BalanceChange, error) {
@@ -97,12 +88,12 @@ func (b *Balancer) GetWithdrawals(
 }
 
 func NewBalancer(
-	ordersService IOrdersService,
+	ordersService OrderAdder,
 	balanceStorage balancePackage.Storage,
 	logger *zap.Logger,
-) *Balancer {
-	return &Balancer{
-		ordersService:  ordersService,
+) *BalanceService {
+	return &BalanceService{
+		ordersAdder:    ordersService,
 		balanceStorage: balanceStorage,
 		logger:         logger,
 	}

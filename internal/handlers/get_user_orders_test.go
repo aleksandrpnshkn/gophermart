@@ -30,9 +30,9 @@ func TestGetUserOrders(t *testing.T) {
 	}
 
 	t.Run("new order added", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReceiver := mocks.NewMockUserReceiver(ctrl)
+		userReceiver.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
 		loc, _ := time.LoadLocation("Europe/Moscow")
@@ -58,14 +58,14 @@ func TestGetUserOrders(t *testing.T) {
 			},
 		}
 
-		accrualService := mocks.NewMockIAccrualService(ctrl)
+		accrualer := mocks.NewMockAccrualer(ctrl)
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			GetUserOrders(gomock.Any(), gomock.Any()).
 			Return(orders, nil)
-		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
+		ordersService := services.NewOrdersService(ordersStorage, accrualer, logger)
 
-		handler := GetUserOrders(responser, auther, logger, ordersService)
+		handler := GetUserOrders(responser, userReceiver, logger, ordersService)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -95,19 +95,19 @@ func TestGetUserOrders(t *testing.T) {
 	})
 
 	t.Run("user has no orders", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReceiver := mocks.NewMockUserReceiver(ctrl)
+		userReceiver.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
-		accrualService := mocks.NewMockIAccrualService(ctrl)
+		accrualer := mocks.NewMockAccrualer(ctrl)
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			GetUserOrders(gomock.Any(), gomock.Any()).
 			Return([]models.Order{}, nil)
-		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
+		ordersService := services.NewOrdersService(ordersStorage, accrualer, logger)
 
-		handler := GetUserOrders(responser, auther, logger, ordersService)
+		handler := GetUserOrders(responser, userReceiver, logger, ordersService)
 
 		apitest.New().
 			HandlerFunc(handler).

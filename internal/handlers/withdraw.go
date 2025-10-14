@@ -16,14 +16,14 @@ import (
 func Withdraw(
 	responser *services.Responser,
 	validate *validator.Validate,
-	auther services.Auther,
-	balancer services.IBalancer,
+	userReceiver UserReceiver,
+	withdrawer Withdrawer,
 	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		user, err := auther.FromUserContext(ctx)
+		user, err := userReceiver.FromContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			responser.WriteInternalServerError(ctx, res)
@@ -50,7 +50,7 @@ func Withdraw(
 			return
 		}
 
-		err = balancer.Withdraw(ctx, requestData.OrderNumber, requestData.Amount, user)
+		err = withdrawer.Withdraw(ctx, requestData.OrderNumber, requestData.Amount, user)
 		if err != nil {
 			if errors.Is(err, services.ErrBalanceNotEnoughFunds) {
 				res.WriteHeader(http.StatusPaymentRequired)

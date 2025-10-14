@@ -16,16 +16,6 @@ type Claims struct {
 	UserID int64
 }
 
-type Auther interface {
-	ParseToken(ctx context.Context, token types.RawToken) (models.User, error)
-
-	RegisterUser(ctx context.Context, login string, password string) (models.User, types.RawToken, error)
-
-	LoginUser(ctx context.Context, login string, password string) (models.User, types.RawToken, error)
-
-	FromUserContext(ctx context.Context) (models.User, error)
-}
-
 type JwtAuther struct {
 	usersStorage users.Storage
 
@@ -121,7 +111,7 @@ func (a *JwtAuther) LoginUser(
 	return user, token, nil
 }
 
-func (a *JwtAuther) FromUserContext(ctx context.Context) (models.User, error) {
+func (a *JwtAuther) FromContext(ctx context.Context) (models.User, error) {
 	userID, ok := ctx.Value(ctxUserID).(int64)
 	if !ok {
 		return models.User{}, errors.New("user id is not set")

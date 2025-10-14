@@ -24,9 +24,9 @@ func TestRegister(t *testing.T) {
 	logger := zap.NewExample()
 
 	t.Run("invalid data format", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
+		userRegisterer := mocks.NewMockUserRegisterer(ctrl)
 
-		handler := Register(responser, validate, auther, logger)
+		handler := Register(responser, validate, userRegisterer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -37,9 +37,9 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("invalid data", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
+		userRegisterer := mocks.NewMockUserRegisterer(ctrl)
 
-		handler := Register(responser, validate, auther, logger)
+		handler := Register(responser, validate, userRegisterer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -71,12 +71,12 @@ func TestRegister(t *testing.T) {
 		}
 		rawToken := types.RawToken("token")
 
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
+		userRegisterer := mocks.NewMockUserRegisterer(ctrl)
+		userRegisterer.EXPECT().
 			RegisterUser(gomock.Any(), "admin", "secret").
 			Return(user, rawToken, nil)
 
-		handler := Register(responser, validate, auther, logger)
+		handler := Register(responser, validate, userRegisterer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -93,12 +93,12 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("user already exists", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
+		userRegisterer := mocks.NewMockUserRegisterer(ctrl)
+		userRegisterer.EXPECT().
 			RegisterUser(gomock.Any(), "admin", "secret").
 			Return(models.User{}, types.RawToken(""), services.ErrLoginAlreadyExists)
 
-		handler := Register(responser, validate, auther, logger)
+		handler := Register(responser, validate, userRegisterer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).

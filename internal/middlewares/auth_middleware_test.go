@@ -26,9 +26,9 @@ func TestAuthMiddleware(t *testing.T) {
 			ID: 123,
 		}
 
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().ParseToken(gomock.Any(), testToken).Return(testUser, nil)
-		handler := NewAuthMiddleware(responser, zap.NewExample(), auther)(testOkHandler())
+		tokenParser := mocks.NewMockTokenParser(ctrl)
+		tokenParser.EXPECT().ParseToken(gomock.Any(), testToken).Return(testUser, nil)
+		handler := NewAuthMiddleware(responser, zap.NewExample(), tokenParser)(testOkHandler())
 
 		apitest.New().
 			Handler(handler).

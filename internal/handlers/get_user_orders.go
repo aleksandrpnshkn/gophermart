@@ -12,13 +12,13 @@ import (
 
 func GetUserOrders(
 	responser *services.Responser,
-	auther services.Auther,
+	userReceiver UserReceiver,
 	logger *zap.Logger,
-	ordersService services.IOrdersService,
+	ordersService OrdersService,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
-		user, err := auther.FromUserContext(ctx)
+		user, err := userReceiver.FromContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			responser.WriteInternalServerError(ctx, res)

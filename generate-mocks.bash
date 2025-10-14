@@ -19,12 +19,17 @@ mockgen -destination=internal/mocks/mock_users_storage.go -package=mocks -mock_n
 mockgen -destination=internal/mocks/mock_orders_storage.go -package=mocks -mock_names Storage=MockOrdersStorage ./internal/storage/orders Storage
 mockgen -destination=internal/mocks/mock_balance_storage.go -package=mocks -mock_names Storage=MockBalanceStorage ./internal/storage/balance Storage
 
-mockgen -destination=internal/mocks/mock_services_auther.go -package=mocks ./internal/services Auther
+mockgen -destination=internal/mocks/mock_user_reciever.go -package=mocks ./internal/handlers UserReceiver
+mockgen -destination=internal/mocks/mock_user_registerer.go -package=mocks ./internal/handlers UserRegisterer
+mockgen -destination=internal/mocks/mock_user_loginer.go -package=mocks ./internal/handlers UserLoginer
+mockgen -destination=internal/mocks/mock_token_parser.go -package=mocks ./internal/middlewares TokenParser
 
-mockgen -destination=internal/mocks/mock_services_accrual_service.go -package=mocks ./internal/services IAccrualService
-mockgen -destination=internal/mocks/mock_services_orders_service.go -package=mocks ./internal/services IOrdersService
-mockgen -destination=internal/mocks/mock_services_balancer.go -package=mocks ./internal/services IBalancer
+mockgen -destination=internal/mocks/mock_orders_service.go -package=mocks ./internal/handlers OrdersService
 
-mockgen -destination=internal/mocks/mock_services_orders_queue.go -package=mocks ./internal/services OrdersQueue
+mockgen -destination=internal/mocks/mock_accrualer.go -package=mocks ./internal/services Accrualer
+mockgen -destination=internal/mocks/mock_withdrawer.go -package=mocks ./internal/handlers Withdrawer
+mockgen -destination=internal/mocks/mock_balancer.go -package=mocks ./internal/handlers Balancer
+
+mockgen -destination=internal/mocks/mock_orders_queue.go -package=mocks ./internal/handlers OrdersQueue
 
 echo "Finish"

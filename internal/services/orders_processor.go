@@ -7,12 +7,6 @@ import (
 	"github.com/aleksandrpnshkn/gophermart/internal/models"
 )
 
-type OrderJobProcessor interface {
-	GetName() string
-
-	Process(ctx context.Context, order models.Order) (models.Order, error)
-}
-
 type GetAccrualProcessor struct {
 	ordersService *OrdersService
 }

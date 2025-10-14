@@ -25,7 +25,7 @@ func TestBalancer(t *testing.T) {
 
 	t.Run("invalid amount", func(t *testing.T) {
 		balanceStorage := mocks.NewMockBalanceStorage(ctrl)
-		ordersService := mocks.NewMockIOrdersService(ctrl)
+		ordersService := mocks.NewMockOrdersService(ctrl)
 
 		balancer := NewBalancer(ordersService, balanceStorage, logger)
 
@@ -36,7 +36,7 @@ func TestBalancer(t *testing.T) {
 
 	t.Run("negative amount", func(t *testing.T) {
 		balanceStorage := mocks.NewMockBalanceStorage(ctrl)
-		ordersService := mocks.NewMockIOrdersService(ctrl)
+		ordersService := mocks.NewMockOrdersService(ctrl)
 
 		balancer := NewBalancer(ordersService, balanceStorage, logger)
 

@@ -1,23 +1,30 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/middlewares"
+	"github.com/aleksandrpnshkn/gophermart/internal/models"
 	"github.com/aleksandrpnshkn/gophermart/internal/requests"
 	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 	"github.com/aleksandrpnshkn/gophermart/internal/services"
+	"github.com/aleksandrpnshkn/gophermart/internal/types"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
 
+type UserRegisterer interface {
+	RegisterUser(ctx context.Context, login string, password string) (models.User, types.RawToken, error)
+}
+
 func Register(
 	responser *services.Responser,
 	validate *validator.Validate,
-	auther services.Auther,
+	userRegisterer UserRegisterer,
 	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -43,7 +50,7 @@ func Register(
 			return
 		}
 
-		_, token, err := auther.RegisterUser(ctx, requestData.Login, requestData.Password)
+		_, token, err := userRegisterer.RegisterUser(ctx, requestData.Login, requestData.Password)
 		if err != nil {
 			if errors.Is(err, services.ErrLoginAlreadyExists) {
 				res.WriteHeader(http.StatusConflict)

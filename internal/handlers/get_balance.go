@@ -1,24 +1,41 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"github.com/aleksandrpnshkn/gophermart/internal/models"
 	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 	"github.com/aleksandrpnshkn/gophermart/internal/services"
 	"go.uber.org/zap"
 )
 
+type Withdrawer interface {
+	Withdraw(
+		ctx context.Context,
+		orderNumber string,
+		amountRaw float64,
+		user models.User,
+	) error
+
+	GetWithdrawals(ctx context.Context, user models.User) ([]models.BalanceChange, error)
+}
+
+type Balancer interface {
+	GetBalance(ctx context.Context, user models.User) (models.Balance, error)
+}
+
 func GetBalance(
 	responser *services.Responser,
-	auther services.Auther,
-	balancer services.IBalancer,
+	userReceiver UserReceiver,
+	balancer Balancer,
 	logger *zap.Logger,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		user, err := auther.FromUserContext(ctx)
+		user, err := userReceiver.FromContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			responser.WriteInternalServerError(ctx, res)

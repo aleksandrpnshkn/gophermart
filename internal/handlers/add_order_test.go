@@ -29,23 +29,23 @@ func TestAddOrder(t *testing.T) {
 	}
 
 	t.Run("new order added", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReciever := mocks.NewMockUserReceiver(ctrl)
+		userReciever.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
-		accrualService := mocks.NewMockIAccrualService(ctrl)
+		accrualer := mocks.NewMockAccrualer(ctrl)
 
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
 			Return(models.Order{}, nil)
-		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
+		ordersService := services.NewOrdersService(ordersStorage, accrualer, logger)
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 		ordersQueue.EXPECT().Add(gomock.Any(), gomock.Any()).Return(nil)
 
-		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, userReciever, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -58,15 +58,15 @@ func TestAddOrder(t *testing.T) {
 	})
 
 	t.Run("invalid order number", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReciever := mocks.NewMockUserReceiver(ctrl)
+		userReciever.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
-		ordersService := mocks.NewMockIOrdersService(ctrl)
+		ordersService := mocks.NewMockOrdersService(ctrl)
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 
-		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, userReciever, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -79,22 +79,22 @@ func TestAddOrder(t *testing.T) {
 	})
 
 	t.Run("order already created", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReciever := mocks.NewMockUserReceiver(ctrl)
+		userReciever.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
-		accrualService := mocks.NewMockIAccrualService(ctrl)
+		accrualer := mocks.NewMockAccrualer(ctrl)
 
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
 			Return(models.Order{}, orders.ErrOrderAlreadyCreated)
-		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
+		ordersService := services.NewOrdersService(ordersStorage, accrualer, logger)
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 
-		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, userReciever, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).
@@ -107,22 +107,22 @@ func TestAddOrder(t *testing.T) {
 	})
 
 	t.Run("order already created by another user", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReciever := mocks.NewMockUserReceiver(ctrl)
+		userReciever.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
-		accrualService := mocks.NewMockIAccrualService(ctrl)
+		accrualer := mocks.NewMockAccrualer(ctrl)
 
 		ordersStorage := mocks.NewMockOrdersStorage(ctrl)
 		ordersStorage.EXPECT().
 			Create(gomock.Any(), gomock.Any()).
 			Return(models.Order{}, orders.ErrOrderAlreadyCreatedByAnotherUser)
-		ordersService := services.NewOrdersService(ordersStorage, accrualService, logger)
+		ordersService := services.NewOrdersService(ordersStorage, accrualer, logger)
 
 		ordersQueue := mocks.NewMockOrdersQueue(ctrl)
 
-		handler := AddOrder(responser, auther, logger, ordersService, ordersQueue)
+		handler := AddOrder(responser, userReciever, logger, ordersService, ordersQueue)
 
 		apitest.New().
 			HandlerFunc(handler).

@@ -1,26 +1,48 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
 
+	"github.com/aleksandrpnshkn/gophermart/internal/models"
 	"github.com/aleksandrpnshkn/gophermart/internal/responses"
 	"github.com/aleksandrpnshkn/gophermart/internal/services"
 	"go.uber.org/zap"
 )
 
+type UserReceiver interface {
+	FromContext(ctx context.Context) (models.User, error)
+}
+
+type OrdersQueue interface {
+	Add(ctx context.Context, order models.Order) error
+
+	Stop()
+}
+
+type OrdersService interface {
+	Add(ctx context.Context, orderNumber string, user models.User) (models.Order, error)
+
+	UpdateAccrual(ctx context.Context, order models.Order) (models.Order, error)
+
+	GetUserOrders(ctx context.Context, user models.User) ([]models.Order, error)
+
+	HasProcessedStatus(order models.Order) bool
+}
+
 func AddOrder(
 	responser *services.Responser,
-	auther services.Auther,
+	userReciever UserReceiver,
 	logger *zap.Logger,
-	ordersService services.IOrdersService,
-	ordersQueue services.OrdersQueue,
+	ordersService OrdersService,
+	ordersQueue OrdersQueue,
 ) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		user, err := auther.FromUserContext(ctx)
+		user, err := userReciever.FromContext(ctx)
 		if err != nil {
 			logger.Error("failed to get user", zap.Error(err))
 			responser.WriteInternalServerError(ctx, res)

@@ -59,9 +59,9 @@ func TestAccrualService(t *testing.T) {
 
 			client := srv.Client()
 
-			accrualService := NewAccrualService(client, logger, srv.URL)
+			accrualer := NewAccrualService(client, logger, srv.URL)
 
-			accrual, err := accrualService.GetAccrual(context.Background(), "123")
+			accrual, err := accrualer.GetAccrual(context.Background(), "123")
 
 			require.NoError(t, err)
 			assert.Equal(t, test.expectedAccrual, accrual.String())

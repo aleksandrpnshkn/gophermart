@@ -30,9 +30,9 @@ func TestWithdraw(t *testing.T) {
 	}
 
 	t.Run("widthdraw successfully", func(t *testing.T) {
-		auther := mocks.NewMockAuther(ctrl)
-		auther.EXPECT().
-			FromUserContext(gomock.Any()).
+		userReceiver := mocks.NewMockUserReceiver(ctrl)
+		userReceiver.EXPECT().
+			FromContext(gomock.Any()).
 			Return(user, nil)
 
 		newOrder := models.Order{
@@ -40,7 +40,7 @@ func TestWithdraw(t *testing.T) {
 			UserID:      user.ID,
 		}
 
-		ordersService := mocks.NewMockIOrdersService(ctrl)
+		ordersService := mocks.NewMockOrdersService(ctrl)
 		ordersService.EXPECT().
 			Add(gomock.Any(), "2377225624", user).
 			Return(newOrder, nil)
@@ -66,7 +66,7 @@ func TestWithdraw(t *testing.T) {
 
 		balancer := services.NewBalancer(ordersService, balanceStorage, logger)
 
-		handler := Withdraw(responser, validate, auther, balancer, logger)
+		handler := Withdraw(responser, validate, userReceiver, balancer, logger)
 
 		apitest.New().
 			HandlerFunc(handler).
