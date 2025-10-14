@@ -39,9 +39,13 @@ func (s *SQLStorage) Withdraw(ctx context.Context, withdraw models.BalanceChange
 
 	var balance decimal.Decimal
 
-	row := s.pgxpool.QueryRow(ctx, `
-        SELECT SUM(amount) FROM balance_logs 
-        WHERE user_id = $1
+	row := tx.QueryRow(ctx, `
+        SELECT COALESCE(SUM(amount), 0) 
+        FROM (
+            SELECT amount FROM balance_logs 
+            WHERE user_id = $1
+            FOR UPDATE
+        )
     `, withdraw.UserID)
 	err = row.Scan(&balance)
 	if err != nil {
@@ -52,7 +56,7 @@ func (s *SQLStorage) Withdraw(ctx context.Context, withdraw models.BalanceChange
 		return ErrNotEnoughFunds
 	}
 
-	_, err = s.pgxpool.Exec(ctx, ChangeBalanceQuery, pgx.NamedArgs{
+	_, err = tx.Exec(ctx, ChangeBalanceQuery, pgx.NamedArgs{
 		"order_number": withdraw.OrderNumber,
 		"user_id":      withdraw.UserID,
 		"amount":       withdraw.Amount,
@@ -113,8 +117,8 @@ func (s *SQLStorage) GetBalance(
 
 	row := s.pgxpool.QueryRow(ctx, `
         SELECT 
-            SUM(amount) AS current,
-            SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) AS withdrawn
+            COALESCE(SUM(amount), 0) AS current,
+            COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) AS withdrawn
         FROM balance_logs 
         WHERE user_id = $1
     `, user.ID)
