@@ -21,6 +21,13 @@ func (p *GetAccrualProcessor) Process(
 ) (models.Order, error) {
 	order, err := p.ordersService.UpdateAccrual(ctx, order)
 	if err != nil {
+		var e *ErrAccrualFailedToGetWithRetry
+		if errors.As(err, &e) {
+			return order, &ErrWorkerRetry{
+				RetryAfter: e.RetryAfter,
+			}
+		}
+
 		if errors.Is(err, ErrAccrualNotProcessedStatus) ||
 			errors.Is(err, ErrAccrualFailedToGet) {
 			return order, ErrJobRetry

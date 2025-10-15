@@ -30,6 +30,7 @@ mockgen -destination=internal/mocks/mock_accrualer.go -package=mocks ./internal/
 mockgen -destination=internal/mocks/mock_withdrawer.go -package=mocks ./internal/handlers Withdrawer
 mockgen -destination=internal/mocks/mock_balancer.go -package=mocks ./internal/handlers Balancer
 
+mockgen -destination=internal/mocks/mock_order_job_processor.go -package=mocks ./internal/services OrderJobProcessor
 mockgen -destination=internal/mocks/mock_orders_queue.go -package=mocks ./internal/handlers OrdersQueue
 
 echo "Finish"

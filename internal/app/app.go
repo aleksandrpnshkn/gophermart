@@ -18,6 +18,9 @@ import (
 )
 
 const (
+	orderQueueWorkersCount = 3
+	orderQueueJobsDelay    = 10 * time.Second
+
 	shutdownTimeout = 20 * time.Second
 )
 
@@ -48,10 +51,11 @@ func Run(
 
 	ordersProceessor := services.NewOrdersProcessor(ordersService)
 	ordersQueue := services.NewOrdersQueue(
-		appCtx,
 		ordersProceessor,
 		logger,
+		orderQueueJobsDelay,
 	)
+	services.RunQueue(appCtx, ordersQueue, orderQueueWorkersCount)
 
 	balancer := services.NewBalancer(ordersService, storages.Balance, logger)
 

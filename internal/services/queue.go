@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aleksandrpnshkn/gophermart/internal/models"
@@ -15,6 +16,18 @@ type OrderJobProcessor interface {
 	Process(ctx context.Context, order models.Order) (models.Order, error)
 }
 
+var (
+	ErrJobRetry = errors.New("retriable error occurred during job processing")
+)
+
+type ErrWorkerRetry struct {
+	RetryAfter int
+}
+
+func (e *ErrWorkerRetry) Error() string {
+	return fmt.Sprintf("worker should retry jobs after %d", e.RetryAfter)
+}
+
 type MemoryOrdersQueue struct {
 	processor OrderJobProcessor
 	logger    *zap.Logger
@@ -23,10 +36,6 @@ type MemoryOrdersQueue struct {
 	jobTimeout time.Duration
 	jobsDelay  time.Duration
 }
-
-var (
-	ErrJobRetry = errors.New("retriable error occurred during job processing")
-)
 
 func (q *MemoryOrdersQueue) Add(ctx context.Context, order models.Order) error {
 	select {
@@ -42,12 +51,17 @@ func (q *MemoryOrdersQueue) Stop() {
 	close(q.jobsQueue)
 }
 
-func (q *MemoryOrdersQueue) runWorker(ctx context.Context) {
+func (q *MemoryOrdersQueue) RunWorker(ctx context.Context) {
 	q.logger.Info("running queue worker...",
 		zap.String("job_name", q.processor.GetName()),
 	)
 
 	for {
+		// лайфхак для простоты тестов - избавиться от рандомности в select при закрытом контексте
+		if ctx.Err() != nil {
+			return
+		}
+
 		select {
 		case <-ctx.Done():
 			return
@@ -57,7 +71,26 @@ func (q *MemoryOrdersQueue) runWorker(ctx context.Context) {
 
 			order, err := q.processor.Process(jobCtx, order)
 			if err != nil {
-				if errors.Is(err, ErrJobRetry) {
+				var e *ErrWorkerRetry
+				if errors.As(err, &e) {
+					q.logger.Info("pausing worker...",
+						zap.String("order_number", order.OrderNumber),
+						zap.String("job_name", q.processor.GetName()),
+						zap.Int("retry_delay", e.RetryAfter),
+						zap.Error(e),
+					)
+
+					workerDelay := time.Second * time.Duration(e.RetryAfter)
+
+					err := q.retry(ctx, order, workerDelay)
+					if err != nil {
+						q.logger.Error("failed to retry job after worker was paused",
+							zap.String("order_number", order.OrderNumber),
+							zap.String("job_name", q.processor.GetName()),
+							zap.Error(err),
+						)
+					}
+				} else if errors.Is(err, ErrJobRetry) {
 					q.logger.Info("retrying order job",
 						zap.String("order_number", order.OrderNumber),
 						zap.String("job_name", q.processor.GetName()),
@@ -67,7 +100,14 @@ func (q *MemoryOrdersQueue) runWorker(ctx context.Context) {
 						retryCtx, cancel := context.WithTimeout(ctx, q.jobTimeout)
 						defer cancel()
 
-						q.retry(retryCtx, order)
+						err := q.retry(retryCtx, order, q.jobsDelay)
+						if err != nil {
+							q.logger.Error("failed to retry job",
+								zap.String("order_number", order.OrderNumber),
+								zap.String("job_name", q.processor.GetName()),
+								zap.Error(err),
+							)
+						}
 					}()
 				} else {
 					q.logger.Error("order job failed",
@@ -85,26 +125,24 @@ func (q *MemoryOrdersQueue) runWorker(ctx context.Context) {
 	}
 }
 
-func (q *MemoryOrdersQueue) retry(ctx context.Context, order models.Order) {
+func (q *MemoryOrdersQueue) retry(
+	ctx context.Context,
+	order models.Order,
+	delay time.Duration,
+) error {
 	select {
 	case <-ctx.Done():
-		q.logger.Error("worker stopped before order job retry",
-			zap.String("order_number", order.OrderNumber),
-			zap.String("job_name", q.processor.GetName()),
-		)
-		return
-	case <-time.After(q.jobsDelay):
-		q.Add(ctx, order)
-		return
+		return ctx.Err()
+	case <-time.After(delay):
+		return q.Add(ctx, order)
 	}
 }
 
 func NewOrdersQueue(
-	ctx context.Context,
 	ordersProcessor OrderJobProcessor,
 	logger *zap.Logger,
+	jobsDelay time.Duration,
 ) *MemoryOrdersQueue {
-	workersNum := 3
 	jobTimeout := 10 * time.Second
 	jobsQueue := make(chan models.Order, 100)
 
@@ -114,12 +152,7 @@ func NewOrdersQueue(
 
 		jobsQueue:  jobsQueue,
 		jobTimeout: jobTimeout,
-	}
-
-	for i := 0; i < workersNum; i++ {
-		go func() {
-			queue.runWorker(ctx)
-		}()
+		jobsDelay:  jobsDelay,
 	}
 
 	return &queue
